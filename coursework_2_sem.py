@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Callable, List, Tuple
+from tabulate import tabulate
 
 
 def runge_kutta_3(f: Callable, y0: np.ndarray, t_span: Tuple[float, float],
@@ -60,8 +61,8 @@ def find_equilibrium_points(params: dict) -> List[np.ndarray]:
     Y_eq = (1 - epsilon * X_eq) * (1 + alpha * X_eq)
 
     equilibria = [eq1, eq2]
-    if X_eq > 0 and Y_eq > 0:
-        equilibria.append(np.array([X_eq, Y_eq]))
+    
+    equilibria.append(np.array([X_eq, abs(Y_eq)]))
 
     return equilibria
 
@@ -141,17 +142,30 @@ def main():
     plt.tight_layout()
     plt.savefig('error_analysis.png')
 
-    params = {'alpha': 0.5, 'epsilon': 0.1, 'gamma': 1}
-    equilibria = find_equilibrium_points(params)
-
-    print("\nСтационарные точки системы хищник-жертва:")
-    for i, eq in enumerate(equilibria):
-        print(f"Точка {i + 1}: X = {eq[0]:.4f}, Y = {eq[1]:.4f}")
-
     alpha_values = np.linspace(0.1, 0.9, 9)
+    table_data = []
     t_span_pp = (0, 50)
     y0_pp = np.array([3, 1])  # Начальные условия для системы хищник-жертва
+    
 
+    for alpha in alpha_values:
+        params = {'alpha': alpha, 'epsilon': 0.1, 'gamma': 1}
+        equilibria = find_equilibrium_points(params)
+
+        row = [f"{alpha:.1f}"]
+        for eq in equilibria:
+            row.extend([f"{eq[0]:.4f}", f"{eq[1]:.4f}"])
+        table_data.append(row)
+    
+    headers = ["α", "X1", "Y1", "X2", "Y2", "X3", "Y3"]
+    for row in table_data:
+        while len(row) < len(headers):
+            row.append("")
+
+    print("\nСтационарные точки системы хищник-жертва:")
+    print ("epsilon = 0.1, gamma = 1")
+    print(tabulate(table_data, headers=headers, tablefmt="grid"))
+    
     plt.figure(figsize=(15, 10))
 
     for i, alpha in enumerate(alpha_values):
